@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Calendar, Phone, User, LogOut } from "lucide-react";
+import { Menu, X, Calendar, Phone, User, LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   DropdownMenu,
@@ -85,6 +85,10 @@ const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/admin")} className="gap-2">
+                    <Settings className="w-4 h-4" />
+                    Admin Panel
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSignOut} className="gap-2">
                     <LogOut className="w-4 h-4" />
                     Sign Out
