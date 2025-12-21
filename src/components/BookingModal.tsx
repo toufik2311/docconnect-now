@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,16 +12,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { CalendarIcon, Clock, CheckCircle2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import type { Doctor } from "./DoctorCard";
 
 interface BookingModalProps {
@@ -48,31 +44,45 @@ const BookingModal = ({ isOpen, onClose, doctor }: BookingModalProps) => {
   const [step, setStep] = useState(1);
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [time, setTime] = useState("");
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    reason: "",
-  });
+  const [reason, setReason] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = () => {
-    if (!formData.name || !formData.email || !formData.phone) {
-      toast.error("Please fill in all required fields");
+  const handleSubmit = async () => {
+    if (!user) {
+      toast.error("Please sign in to book an appointment");
+      onClose();
+      navigate("/auth");
       return;
     }
 
-    // Simulate booking
+    if (!doctor || !date || !time) {
+      toast.error("Please select a date and time");
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await supabase.from("appointments").insert({
+      patient_id: user.id,
+      doctor_id: doctor.id,
+      appointment_date: date.toISOString().split("T")[0],
+      appointment_time: time,
+      reason: reason || null,
+      status: "scheduled",
+    });
+
+    setLoading(false);
+
+    if (error) {
+      console.error("Error booking appointment:", error);
+      toast.error("Failed to book appointment. Please try again.");
+      return;
+    }
+
     toast.success("Appointment booked successfully!", {
-      description: `Your appointment with ${doctor?.name} is confirmed for ${date?.toLocaleDateString()} at ${time}`,
+      description: `Your appointment with ${doctor.name} is confirmed for ${date.toLocaleDateString()} at ${time}`,
     });
 
     setStep(3);
@@ -82,7 +92,7 @@ const BookingModal = ({ isOpen, onClose, doctor }: BookingModalProps) => {
     setStep(1);
     setDate(undefined);
     setTime("");
-    setFormData({ name: "", email: "", phone: "", reason: "" });
+    setReason("");
     onClose();
   };
 
@@ -111,10 +121,19 @@ const BookingModal = ({ isOpen, onClose, doctor }: BookingModalProps) => {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
+              {/* Auth Check */}
+              {!user && (
+                <div className="p-4 bg-warning/10 border border-warning/20 rounded-xl">
+                  <p className="text-sm text-warning-foreground">
+                    You'll need to sign in to complete your booking.
+                  </p>
+                </div>
+              )}
+
               {/* Doctor Info */}
               <div className="flex items-center gap-4 p-4 bg-muted rounded-xl">
                 <img
-                  src={doctor.image}
+                  src={doctor.image || "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face"}
                   alt={doctor.name}
                   className="w-16 h-16 rounded-lg object-cover"
                 />
@@ -136,7 +155,7 @@ const BookingModal = ({ isOpen, onClose, doctor }: BookingModalProps) => {
                   selected={date}
                   onSelect={setDate}
                   disabled={(date) => date < new Date() || date.getDay() === 0}
-                  className="rounded-xl border mx-auto"
+                  className="rounded-xl border mx-auto pointer-events-auto"
                 />
               </div>
 
@@ -195,62 +214,29 @@ const BookingModal = ({ isOpen, onClose, doctor }: BookingModalProps) => {
                 <p className="text-sm text-primary">with {doctor.name}</p>
               </div>
 
-              {/* Patient Form */}
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name *</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="John Doe"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="john@example.com"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="+1 (555) 123-4567"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="reason">Reason for Visit</Label>
-                  <Textarea
-                    id="reason"
-                    name="reason"
-                    value={formData.reason}
-                    onChange={handleInputChange}
-                    placeholder="Briefly describe your symptoms or reason for the visit..."
-                    rows={3}
-                  />
-                </div>
+              {/* Reason for Visit */}
+              <div className="space-y-2">
+                <Label htmlFor="reason">Reason for Visit (Optional)</Label>
+                <Textarea
+                  id="reason"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Briefly describe your symptoms or reason for the visit..."
+                  rows={3}
+                />
               </div>
 
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
                   Back
                 </Button>
-                <Button variant="hero" onClick={handleSubmit} className="flex-1">
-                  Confirm Booking
+                <Button 
+                  variant="hero" 
+                  onClick={handleSubmit} 
+                  className="flex-1"
+                  disabled={loading}
+                >
+                  {loading ? "Booking..." : "Confirm Booking"}
                 </Button>
               </div>
             </motion.div>
@@ -277,7 +263,7 @@ const BookingModal = ({ isOpen, onClose, doctor }: BookingModalProps) => {
                   Appointment Confirmed!
                 </h3>
                 <p className="text-muted-foreground">
-                  We've sent a confirmation email to {formData.email}
+                  We've saved your appointment. You can view it in your dashboard.
                 </p>
               </div>
 

@@ -1,11 +1,21 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Calendar, Phone } from "lucide-react";
+import { Menu, X, Calendar, Phone, User, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -14,6 +24,10 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   const navLinks = [
     { label: "Home", href: "#" },
@@ -62,10 +76,27 @@ const Navbar = () => {
               <Phone className="w-4 h-4" />
               Emergency
             </Button>
-            <Button variant="hero" size="default">
-              <Calendar className="w-4 h-4" />
-              Book Now
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="default" className="gap-2">
+                    <User className="w-4 h-4" />
+                    {user.user_metadata?.full_name || user.email?.split("@")[0]}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleSignOut} className="gap-2">
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="hero" size="default" onClick={() => navigate("/auth")}>
+                <Calendar className="w-4 h-4" />
+                Sign In
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -105,10 +136,17 @@ const Navbar = () => {
                   <Phone className="w-4 h-4" />
                   Emergency Line
                 </Button>
-                <Button variant="hero" className="w-full">
-                  <Calendar className="w-4 h-4" />
-                  Book Appointment
-                </Button>
+                {user ? (
+                  <Button variant="outline" className="w-full gap-2" onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </Button>
+                ) : (
+                  <Button variant="hero" className="w-full" onClick={() => { navigate("/auth"); setIsMobileMenuOpen(false); }}>
+                    <User className="w-4 h-4" />
+                    Sign In
+                  </Button>
+                )}
               </div>
             </div>
           </motion.div>

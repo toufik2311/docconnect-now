@@ -1,94 +1,40 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import DoctorCard, { Doctor } from "./DoctorCard";
 import SearchFilters from "./SearchFilters";
 import BookingModal from "./BookingModal";
-
-// Sample doctors data
-const doctorsData: Doctor[] = [
-  {
-    id: 1,
-    name: "Dr. Sarah Johnson",
-    specialty: "Cardiologist",
-    rating: 4.9,
-    reviews: 234,
-    experience: "15 years",
-    location: "Downtown Medical Center",
-    availability: "Available Today",
-    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
-    available: true,
-  },
-  {
-    id: 2,
-    name: "Dr. Michael Chen",
-    specialty: "Dermatologist",
-    rating: 4.8,
-    reviews: 189,
-    experience: "12 years",
-    location: "Westside Clinic",
-    availability: "Available Tomorrow",
-    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
-    available: true,
-  },
-  {
-    id: 3,
-    name: "Dr. Emily Rodriguez",
-    specialty: "Pediatrician",
-    rating: 4.9,
-    reviews: 312,
-    experience: "10 years",
-    location: "Children's Health Center",
-    availability: "Available Today",
-    image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=200&h=200&fit=crop&crop=face",
-    available: true,
-  },
-  {
-    id: 4,
-    name: "Dr. James Wilson",
-    specialty: "General Physician",
-    rating: 4.7,
-    reviews: 445,
-    experience: "20 years",
-    location: "City Health Hub",
-    availability: "Available Today",
-    image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&h=200&fit=crop&crop=face",
-    available: true,
-  },
-  {
-    id: 5,
-    name: "Dr. Amanda Foster",
-    specialty: "Neurologist",
-    rating: 4.8,
-    reviews: 156,
-    experience: "14 years",
-    location: "Neuro Care Center",
-    availability: "Available in 2 days",
-    image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=200&h=200&fit=crop&crop=face",
-    available: false,
-  },
-  {
-    id: 6,
-    name: "Dr. Robert Kim",
-    specialty: "Orthopedic",
-    rating: 4.9,
-    reviews: 278,
-    experience: "18 years",
-    location: "Bone & Joint Clinic",
-    availability: "Available Tomorrow",
-    image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
-    available: true,
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DoctorsList = () => {
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [specialtyFilter, setSpecialtyFilter] = useState("");
   const [availabilityFilter, setAvailabilityFilter] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      const { data, error } = await supabase
+        .from("doctors")
+        .select("*")
+        .order("rating", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching doctors:", error);
+      } else {
+        setDoctors(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchDoctors();
+  }, []);
+
   const filteredDoctors = useMemo(() => {
-    return doctorsData.filter((doctor) => {
+    return doctors.filter((doctor) => {
       const matchesSearch =
         doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase());
@@ -101,12 +47,12 @@ const DoctorsList = () => {
       const matchesAvailability =
         !availabilityFilter ||
         availabilityFilter === "all" ||
-        (availabilityFilter === "today" && doctor.availability.includes("Today")) ||
-        (availabilityFilter === "tomorrow" && doctor.availability.includes("Tomorrow"));
+        (availabilityFilter === "today" && doctor.availability?.includes("Today")) ||
+        (availabilityFilter === "tomorrow" && doctor.availability?.includes("Tomorrow"));
 
       return matchesSearch && matchesSpecialty && matchesAvailability;
     });
-  }, [searchQuery, specialtyFilter, availabilityFilter]);
+  }, [doctors, searchQuery, specialtyFilter, availabilityFilter]);
 
   const handleBookDoctor = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
@@ -146,28 +92,49 @@ const DoctorsList = () => {
           </p>
         </div>
 
-        {/* Doctors Grid */}
-        <div className="grid gap-6">
-          {filteredDoctors.map((doctor, index) => (
-            <DoctorCard
-              key={doctor.id}
-              doctor={doctor}
-              onBook={handleBookDoctor}
-              index={index}
-            />
-          ))}
+        {/* Loading State */}
+        {loading && (
+          <div className="grid gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-card rounded-2xl p-6 border border-border">
+                <div className="flex gap-6">
+                  <Skeleton className="w-32 h-32 rounded-xl" />
+                  <div className="flex-1 space-y-3">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-64" />
+                    <Skeleton className="h-10 w-32" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
-          {filteredDoctors.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12"
-            >
-              <p className="text-lg text-muted-foreground">No doctors found matching your criteria.</p>
-              <p className="text-sm text-muted-foreground mt-2">Try adjusting your filters.</p>
-            </motion.div>
-          )}
-        </div>
+        {/* Doctors Grid */}
+        {!loading && (
+          <div className="grid gap-6">
+            {filteredDoctors.map((doctor, index) => (
+              <DoctorCard
+                key={doctor.id}
+                doctor={doctor}
+                onBook={handleBookDoctor}
+                index={index}
+              />
+            ))}
+
+            {filteredDoctors.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12"
+              >
+                <p className="text-lg text-muted-foreground">No doctors found matching your criteria.</p>
+                <p className="text-sm text-muted-foreground mt-2">Try adjusting your filters.</p>
+              </motion.div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Booking Modal */}
