@@ -5,16 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Star, MapPin, Clock } from "lucide-react";
 
 export interface Doctor {
-  id: number;
+  id: string;
   name: string;
   specialty: string;
-  rating: number;
-  reviews: number;
+  rating: number | null;
+  reviews: number | null;
   experience: string;
   location: string;
-  availability: string;
-  image: string;
-  available: boolean;
+  availability: string | null;
+  image: string | null;
+  available: boolean | null;
 }
 
 interface DoctorCardProps {
@@ -59,7 +59,7 @@ const DoctorCard = ({ doctor, onBook, index }: DoctorCardProps) => {
               <div className="flex flex-wrap gap-2">
                 <Badge variant="success">
                   <Star className="w-3 h-3 fill-current mr-1" />
-                  {doctor.rating} ({doctor.reviews})
+                  {doctor.rating || "N/A"} ({doctor.reviews || 0})
                 </Badge>
                 <Badge variant="muted">{doctor.experience}</Badge>
               </div>
@@ -71,7 +71,7 @@ const DoctorCard = ({ doctor, onBook, index }: DoctorCardProps) => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  <span>{doctor.availability}</span>
+                  <span>{doctor.availability || "Check availability"}</span>
                 </div>
               </div>
             </div>

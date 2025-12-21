@@ -14,7 +14,132 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          created_at: string
+          doctor_id: string
+          id: string
+          patient_id: string
+          reason: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          created_at?: string
+          doctor_id: string
+          id?: string
+          patient_id: string
+          reason?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          created_at?: string
+          doctor_id?: string
+          id?: string
+          patient_id?: string
+          reason?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctors: {
+        Row: {
+          availability: string | null
+          available: boolean | null
+          created_at: string
+          experience: string
+          id: string
+          image: string | null
+          location: string
+          name: string
+          rating: number | null
+          reviews: number | null
+          specialty: string
+          updated_at: string
+        }
+        Insert: {
+          availability?: string | null
+          available?: boolean | null
+          created_at?: string
+          experience: string
+          id?: string
+          image?: string | null
+          location: string
+          name: string
+          rating?: number | null
+          reviews?: number | null
+          specialty: string
+          updated_at?: string
+        }
+        Update: {
+          availability?: string | null
+          available?: boolean | null
+          created_at?: string
+          experience?: string
+          id?: string
+          image?: string | null
+          location?: string
+          name?: string
+          rating?: number | null
+          reviews?: number | null
+          specialty?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
