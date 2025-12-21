@@ -76,6 +76,10 @@ const Navbar = () => {
               <Phone className="w-4 h-4" />
               Emergency
             </Button>
+            <Button variant="hero" size="default" onClick={() => navigate("/doctors")}>
+              <Calendar className="w-4 h-4" />
+              Book Appointment
+            </Button>
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -96,8 +100,8 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button variant="hero" size="default" onClick={() => navigate("/auth")}>
-                <Calendar className="w-4 h-4" />
+              <Button variant="outline" size="default" onClick={() => navigate("/auth")}>
+                <User className="w-4 h-4" />
                 Sign In
               </Button>
             )}

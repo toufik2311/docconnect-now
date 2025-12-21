@@ -1,9 +1,12 @@
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Shield, Star } from "lucide-react";
 import heroImage from "@/assets/hero-doctors.jpg";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-[90vh] gradient-hero overflow-hidden">
       {/* Background Pattern */}
@@ -47,7 +50,7 @@ const HeroSection = () => {
               <Button 
                 variant="hero" 
                 size="xl"
-                onClick={() => document.getElementById("doctors")?.scrollIntoView({ behavior: "smooth" })}
+                onClick={() => navigate("/doctors")}
               >
                 <Calendar className="w-5 h-5" />
                 Book Appointment
@@ -55,7 +58,7 @@ const HeroSection = () => {
               <Button 
                 variant="outline" 
                 size="xl"
-                onClick={() => document.getElementById("doctors")?.scrollIntoView({ behavior: "smooth" })}
+                onClick={() => navigate("/doctors")}
               >
                 Find Doctors
               </Button>
