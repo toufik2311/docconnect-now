@@ -44,11 +44,19 @@ const HeroSection = () => {
             </div>
 
             <div className="flex flex-wrap gap-4">
-              <Button variant="hero" size="xl">
+              <Button 
+                variant="hero" 
+                size="xl"
+                onClick={() => document.getElementById("doctors")?.scrollIntoView({ behavior: "smooth" })}
+              >
                 <Calendar className="w-5 h-5" />
                 Book Appointment
               </Button>
-              <Button variant="outline" size="xl">
+              <Button 
+                variant="outline" 
+                size="xl"
+                onClick={() => document.getElementById("doctors")?.scrollIntoView({ behavior: "smooth" })}
+              >
                 Find Doctors
               </Button>
             </div>
